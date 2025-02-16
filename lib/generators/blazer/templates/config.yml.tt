@@ -32,6 +32,7 @@ data_sources:
     smart_columns:
       # user_id: "SELECT id, name FROM users WHERE id IN {value}"
 
+
     # Columns matching these regular expressions  will be interpreted as date/time
     # if they are strings.
     # This is required for sqlite because it doesn't have a special
@@ -43,6 +44,9 @@ data_sources:
     # - '_timestamp$'
     # - '_date$'
 
+    annotations:
+      # holiday_boxes: SELECT min_date, max_date, label FROM holidays WHERE (min_date, max_date) OVERLAPS ({min_date}, {max_date})
+      # deployment_lines: SELECT date, label FROM deployments WHERE date BETWEEN {min_date} and {max_date}
 
 # create audits
 audit: true

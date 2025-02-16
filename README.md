@@ -176,7 +176,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO blazer;
 COMMIT;
 ```
 
-### MySQL
+### MySQL and MariaDB
 
 Create a user with read-only permissions:
 
@@ -283,6 +283,32 @@ You can also use a hash for static data and enums.
 smart_columns:
   status: {0: "Active", 1: "Archived"}
 ```
+
+### Annotations
+
+Shows overlay lines or box ranges for line queries.
+
+Suppose your sales data and your deployments data, given a query:
+
+```sql
+SELECT date_trunc('hour', created_at), sum(value) FROM sales GROUP BY 1
+```
+
+You might want to see the influence of a deployment for those sales.
+
+```yml
+annotations:
+  deployments: SELECT date, name FROM deployments WHERE date BETWEEN {min_date} AND {max_date}
+```
+
+You can also show periods:
+
+```yml
+annotations:
+  holidays: SELECT min_date, max_date, name FROM holidays WHERE (min_date, max_date) OVERLAPS ({min_date}, {max_date})
+```
+
+Conditions for those queries are optional, but they will help to only fetch the relevant annotations for a particular chart.
 
 ### Caching
 
@@ -448,24 +474,22 @@ anomaly_checks: prophet
 
 ### Trend
 
-[Trend](https://trendapi.org/) uses an external service by default, but you can run it on your own infrastructure as well.
-
 Add [trend](https://github.com/ankane/trend) to your Gemfile:
 
 ```ruby
 gem "trend"
 ```
 
+Set the URL to the [API](https://github.com/ankane/trend-api) in an initializer:
+
+```ruby
+Trend.url = "http://localhost:8000"
+```
+
 And add to `config/blazer.yml`:
 
 ```yml
 anomaly_checks: trend
-```
-
-For the [self-hosted API](https://github.com/ankane/trend-api), create an initializer with:
-
-```ruby
-Trend.url = "http://localhost:8000"
 ```
 
 ### AnomalyDetection.rb
@@ -504,24 +528,22 @@ forecasting: prophet
 
 ### Trend
 
-[Trend](https://trendapi.org/) uses an external service by default, but you can run it on your own infrastructure as well.
-
 Add [trend](https://github.com/ankane/trend) to your Gemfile:
 
 ```ruby
 gem "trend"
 ```
 
+Set the URL to the [API](https://github.com/ankane/trend-api) in an initializer:
+
+```ruby
+Trend.url = "http://localhost:8000"
+```
+
 And add to `config/blazer.yml`:
 
 ```yml
 forecasting: trend
-```
-
-For the [self-hosted API](https://github.com/ankane/trend-api), create an initializer with:
-
-```ruby
-Trend.url = "http://localhost:8000"
 ```
 
 ## Uploads
@@ -583,7 +605,7 @@ data_sources:
 - [Google BigQuery](#google-bigquery)
 - [IBM DB2 and Informix](#ibm-db2-and-informix)
 - [InfluxDB](#influxdb)
-- [MySQL](#mysql-1)
+- [MySQL and MariaDB](#mysql-and-mariadb-1)
 - [Neo4j](#neo4j)
 - [OpenSearch](#opensearch)
 - [Oracle](#oracle)
@@ -656,11 +678,11 @@ Here’s an example IAM policy:
 }
 ```
 
-You also need to configure [S3 permissions](https://aws.amazon.com/premiumsupport/knowledge-center/access-denied-athena/).
+You also need to configure [S3 permissions](https://repost.aws/knowledge-center/access-denied-athena).
 
 ### Amazon Redshift
 
-Add [activerecord6-redshift-adapter](https://github.com/kwent/activerecord6-redshift-adapter) or [activerecord5-redshift-adapter](https://github.com/ConsultingMD/activerecord5-redshift-adapter) to your Gemfile and set:
+Add [activerecord7-redshift-adapter-pennylane](https://github.com/pennylane-hq/activerecord-adapter-redshift) to your Gemfile and set:
 
 ```yml
 data_sources:
@@ -735,7 +757,7 @@ Use a [read-only role](https://docs.datastax.com/en/cql-oss/3.3/cql/cql_using/us
 
 ### Druid
 
-Enable [SQL support](http://druid.io/docs/latest/querying/sql.html#configuration) on the broker and set:
+Enable [SQL support](https://druid.apache.org/docs/latest/querying/sql) on the broker and set:
 
 ```yml
 data_sources:
@@ -761,7 +783,7 @@ Use a [read-only role](https://www.elastic.co/guide/en/elasticsearch/reference/c
 
 ### Google BigQuery
 
-Add [google-cloud-bigquery](https://github.com/GoogleCloudPlatform/google-cloud-ruby/tree/master/google-cloud-bigquery) to your Gemfile and set:
+Add [google-cloud-bigquery](https://github.com/GoogleCloudPlatform/google-cloud-ruby/tree/main/google-cloud-bigquery) to your Gemfile and set:
 
 ```yml
 data_sources:
@@ -796,7 +818,7 @@ data_sources:
 
 Use a [read-only user](https://docs.influxdata.com/influxdb/v1.8/administration/authentication_and_authorization/). Supports [InfluxQL](https://docs.influxdata.com/influxdb/v1.8/query_language/explore-data/).
 
-### MySQL
+### MySQL and MariaDB
 
 Add [mysql2](https://github.com/brianmario/mysql2) to your Gemfile (if it’s not there) and set:
 
@@ -806,7 +828,7 @@ data_sources:
     url: mysql2://user:password@hostname:3306/database
 ```
 
-Use a [read-only user](#mysql).
+Use a [read-only user](#mysql-and-mariadb).
 
 ### Neo4j
 
@@ -860,7 +882,7 @@ Use a [read-only user](#postgresql).
 
 ### Presto
 
-Add [presto-client](https://github.com/treasure-data/presto-client-ruby) to your Gemfile and set:
+Add [trino-client](https://github.com/treasure-data/trino-client-ruby) to your Gemfile and set:
 
 ```yml
 data_sources:
@@ -930,7 +952,7 @@ https://sfc-repo.snowflakecomputing.com/odbc/linux/2.21.5/snowflake-odbc-2.21.5.
 
 > This installs the driver at `/app/.apt/usr/lib/snowflake/odbc/lib/libSnowflake.so`
 
-Then, download the [Snowflake ODBC driver](https://docs.snowflake.net/manuals/user-guide/odbc-download.html). Add [odbc_adapter](https://github.com/localytics/odbc_adapter) to your Gemfile and set:
+Then, download the [Snowflake ODBC driver](https://docs.snowflake.com/developer-guide/odbc/odbc-download). Add [odbc_adapter](https://github.com/localytics/odbc_adapter) to your Gemfile and set:
 
 ```yml
 data_sources:
@@ -1010,10 +1032,6 @@ Have team members who want to learn SQL? Here are a few great, free resources.
 ## Useful Tools
 
 For an easy way to group by day, week, month, and more with correct time zones, check out [Groupdate.sql](https://github.com/ankane/groupdate.sql).
-
-## Standalone Version
-
-Looking for a standalone version? Check out [Ghost Blazer](https://github.com/buren/ghost_blazer).
 
 ## Performance
 

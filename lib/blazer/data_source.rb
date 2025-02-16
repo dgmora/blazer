@@ -11,6 +11,10 @@ module Blazer
       @settings = settings
     end
 
+    def annotations
+      settings["annotations"] || {}
+    end
+
     def adapter
       settings["adapter"] || detect_adapter
     end
@@ -35,13 +39,14 @@ module Blazer
       settings["variable_defaults"] || {}
     end
 
+    def timeout
+      settings["timeout"]
+    end
+
     def time_columns
       settings["time_columns"]&.map { |column_name_regex| Regexp.new(column_name_regex) } || []
     end
 
-    def timeout
-      settings["timeout"]
-    end
 
     def cache
       @cache ||= begin
