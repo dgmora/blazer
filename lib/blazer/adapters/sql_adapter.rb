@@ -156,6 +156,10 @@ module Blazer
         postgresql? || mysql?
       end
 
+      def supports_array?
+        true
+      end
+
       # TODO treat date columns as already in time zone
       def cohort_analysis_statement(statement, period:, days:)
         raise "Cohort analysis not supported" unless supports_cohort_analysis?
@@ -214,7 +218,13 @@ module Blazer
       end
 
       def quoting
-        ->(value) { connection_model.connection.quote(value) }
+        ->(value) {
+          if value.is_a?(Array)
+            value.map { |v| connection_model.connection.quote(v) }.join(',')
+          else
+            connection_model.connection.quote(value)
+          end
+        }
       end
 
       # Redshift adapter silently ignores binds

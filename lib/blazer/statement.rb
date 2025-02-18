@@ -18,7 +18,8 @@ module Blazer
     def add_values(var_params)
       variables.each do |var|
         value = var_params[var].presence
-        value = nil unless value.is_a?(String) # ignore arrays and hashes
+        acceptable_array = value.is_a?(Array) &&  data_source.supports_array?
+        value = nil unless value.is_a?(String) || acceptable_array # ignore (most) arrays and hashes
         if value
           if ["start_time", "end_time"].include?(var)
             value = value.to_s.gsub(" ", "+") # fix for Quip bug
@@ -32,7 +33,7 @@ module Blazer
             end
           end
 
-          unless value.is_a?(ActiveSupport::TimeWithZone)
+          unless value.is_a?(ActiveSupport::TimeWithZone) || value.is_a?(Array)
             if value.match?(/\A\d+\z/)
               value = value.to_i
             elsif value.match?(/\A\d+\.\d+\z/)
